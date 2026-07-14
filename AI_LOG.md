@@ -12,3 +12,10 @@ La IA propuso inicialmente una FSM para un nodo IoT de sensores con manejo de ex
 - Rechacé el modelo de FSM IoT porque se desviaba de la especificación estricta de la guía, la cual pedía un semáforo (`TrafficLightFSM`).
 - Acepté la segunda implementación con `TrafficLightState` y el uso de un diccionario para mapear las transiciones O(1) en lugar de un switch-case procedural.
 - Acepté los 4 tests unitarios de `test_fsm.py` tras verificar que probaban exactamente los escenarios exigidos: estado inicial, transición RED->GREEN, ciclo completo y conteo de ciclos.
+
+## Semana 1 · Entrada 3 (Miércoles)
+Prompt: "Implementa los tres primeros principios SOLID (S, O y L) con el código base y las firmas exactas indicadas en la guía para SensorReader, AlertStrategy, AnomalyDetector y process_sensor"
+La IA propuso inicialmente una versión sobre-diseñada (over-engineered) que renombraba métodos (como `process_sensor_data`), cambiaba firmas de clases e ignoraba las interfaces explícitas entregadas en la guía. Rechacé esa primera propuesta y exigí una corrección estricta:
+- Rechacé la modificación de firmas y el renombramiento de clases base. En arquitectura de software, alterar un contrato preestablecido rompe la compatibilidad e invalida pruebas automatizadas de integración.
+- Acepté la implementación corregida tras auditar que preservaba intacto el fragmento de la guía (`AlertStrategy`, `AnomalyDetector`, `process_sensor`), limitándose únicamente a construir las clases derivadas (`ConsoleAlert`, `FileAlert`, `TemperatureSensor`, `HumiditySensor`) y los ejemplos de contraste "mal/bien".
+- Acepté los 6 tests unitarios correspondientes (2 por cada principio) tras verificar su paso exitoso en pytest.
