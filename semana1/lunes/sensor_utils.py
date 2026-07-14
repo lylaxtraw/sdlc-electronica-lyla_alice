@@ -5,7 +5,7 @@ Todas las funciones aquí son sin efectos secundarios (pure functions).
 from dataclasses import replace
 from typing import Sequence
 
-from semana1.modelos_sensor import Reading, SensorStatus, SensorType
+from semana1.lunes.modelos_sensor import Reading, SensorStatus, SensorType
 
 
 def convert_temperature_c_to_f(reading: Reading) -> Reading:

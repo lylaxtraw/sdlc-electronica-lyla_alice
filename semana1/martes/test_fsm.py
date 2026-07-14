@@ -3,7 +3,7 @@ Pruebas unitarias para TrafficLightFSM.
 Verifica estado inicial, transiciones, ciclo completo y conteo de ciclos.
 """
 import pytest
-from semana1.fsm_demo import TrafficLightFSM, TrafficLightState
+from semana1.martes.fsm_demo import TrafficLightFSM, TrafficLightState
 
 
 @pytest.fixture
