@@ -64,13 +64,13 @@ class SmartActuator:
 # D - PRINCIPIO DE INVERSIÓN DE DEPENDENCIAS (DIP)
 # =====================================================================
 
-# --- Abstracción (El contrato que dicta las reglas del juego) ---
+# --- Abstracción ---
 class DataRepository(Protocol):
     def save(self, reading: SensorReading) -> None: ...
     def get_latest(self, sensor_id: str) -> SensorReading | None: ...
 
 
-# --- Módulo de Alto Nivel (Lógica de Negocio) ---
+# --- Módulo de Alto Nivel ---
 class DataProcessor:
     """
     Depende de la abstracción (DataRepository), no de una implementación concreta.
