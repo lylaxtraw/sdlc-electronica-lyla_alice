@@ -19,3 +19,10 @@ La IA propuso inicialmente una versión sobre-diseñada (over-engineered) que re
 - Rechacé la modificación de firmas y el renombramiento de clases base. En arquitectura de software, alterar un contrato preestablecido rompe la compatibilidad e invalida pruebas automatizadas de integración.
 - Acepté la implementación corregida tras auditar que preservaba intacto el fragmento de la guía (`AlertStrategy`, `AnomalyDetector`, `process_sensor`), limitándose únicamente a construir las clases derivadas (`ConsoleAlert`, `FileAlert`, `TemperatureSensor`, `HumiditySensor`) y los ejemplos de contraste "mal/bien".
 - Acepté los 6 tests unitarios correspondientes (2 por cada principio) tras verificar su paso exitoso en pytest.
+
+## Semana 1 · Entrada 4 (Jueves)
+Prompt: "Completa la biblioteca en semana1/solid_isp_dip.py dividiendo una interfaz gorda en Readable, Writable y Calibratable (ISP), y usando Protocol para inyectar un DataRepository en un DataProcessor (DIP), junto con una implementación InMemoryRepository para pruebas"
+La IA generó las estructuras de los protocolos y las clases de prueba sin alterar el fragmento base proporcionado en la guía. Acepté la implementación tras verificar línea por línea:
+- Acepté la segregación de interfaces con `Protocol` (ISP), ya que evita que dispositivos de solo lectura como un ADC implementen métodos fantasma de calibración o escritura.
+- Acepté el patrón de Inversión de Dependencias (DIP) y la clase `InMemoryRepository`. Comprobé que al inyectar la dependencia vía parámetro en `DataProcessor`, podemos testear toda la lógica de procesamiento en memoria RAM en milisegundos sin depender de conexiones a bases de datos externas.
+- Acepté los 4 tests unitarios elaborados en `test_solid_isp_dip.py` tras validar que pasan limpiamente en pytest y cubren tanto el éxito como el manejo de lecturas inexistentes (`None`).
