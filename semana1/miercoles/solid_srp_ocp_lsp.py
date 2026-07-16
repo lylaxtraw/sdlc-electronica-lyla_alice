@@ -9,9 +9,9 @@ from typing import Any
 from semana1.lunes.modelos_sensor import Reading as SensorReading
 from semana1.lunes.modelos_sensor import SensorStatus, SensorType
 
-# =====================================================================
+# ==========================================================================
 # S - Una clase, una responsabilidad: SensorReader lee; DataLogger persiste.
-# =====================================================================
+# ==========================================================================
 
 # --- MAL (Violación de SRP: Una sola clase lee y persiste) ---
 class BadSensorNode:
@@ -48,10 +48,9 @@ class DataLogger:
         return self._storage
 
 
-# =====================================================================
-# O - AlertStrategy (ABC) con ConsoleAlert y FileAlert: agregar EmailAlert
-#     mañana NO toca el código existente.
-# =====================================================================
+# ================================================================================================================
+# O - AlertStrategy (ABC) con ConsoleAlert y FileAlert: agregar EmailAlert; el mañana NO toca el código existente.
+# ================================================================================================================
 
 # --- MAL (Violación de OCP: Modificar código condicional para nuevas alertas) ---
 class BadAnomalyDetector:
@@ -102,10 +101,9 @@ class AnomalyDetector:
             self._alert.send(f"Anomalia en {reading.sensor_id}")
 
 
-# =====================================================================
-# L - TemperatureSensor y HumiditySensor son intercambiables donde se espera
-#     BaseSensor: process_sensor(sensor: BaseSensor) funciona con cualquiera.
-# =====================================================================
+# ===================================================================================================================================================
+# L - TemperatureSensor y HumiditySensor son intercambiables donde se espera; BaseSensor: process_sensor(sensor: BaseSensor) funciona con cualquiera.
+# ===================================================================================================================================================
 
 class BaseSensor(ABC):
     def __init__(self, sensor_id: str) -> None:
