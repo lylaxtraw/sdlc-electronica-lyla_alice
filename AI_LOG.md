@@ -26,3 +26,10 @@ La IA generó las estructuras de los protocolos y las clases de prueba sin alter
 - Acepté la segregación de interfaces con `Protocol` (ISP), ya que evita que dispositivos de solo lectura como un ADC implementen métodos fantasma de calibración o escritura.
 - Acepté el patrón de Inversión de Dependencias (DIP) y la clase `InMemoryRepository`. Comprobé que al inyectar la dependencia vía parámetro en `DataProcessor`, podemos testear toda la lógica de procesamiento en memoria RAM en milisegundos sin depender de conexiones a bases de datos externas.
 - Acepté los 4 tests unitarios elaborados en `test_solid_isp_dip.py` tras validar que pasan limpiamente en pytest y cubren tanto el éxito como el manejo de lecturas inexistentes (`None`).
+
+## Semana 1 · Entrada 5 (Viernes)
+Prompt: "Genera el código y los tests para el driver UART modular (config, parsers, device, recorder) aplicando principios SOLID según las firmas especificadas en la guía del curso"
+La IA propuso inicialmente una arquitectura con extensiones complejas (como buffers circulares por mutex y loggers JSON) que se desviaban de los archivos requeridos en la especificación. Rechacé la primera propuesta y obligué a una alineación estricta, detectando además un bug crítico en la lógica de evaluación. Igualmente, modifiqué los tests otorgados para separarlos y aplicarles una mejor estructura:
+- **Rechacé el sobre-diseño arquitectónico:** Reduje el alcance para implementar únicamente los 4 archivos dictados por la guía (`config.py`, `parsers.py`, `device.py`, `recorder.py`).
+- **Rechacé y corregí el comportamiento de `can_parse()` en `ModbusParser`:** La IA sugirió lanzar una excepción (`raise ValueError`) si la trama era corta. Esto violaba el Principio de Sustitución de Liskov (LSP) y Abierto/Cerrado (OCP), ya que colgaría la tubería de análisis completa si un coordinador tuviera múltiples parsers en cadena. Lo corregí para retornar `False`.
+- **Acepté las firmas de los 12 tests unitarios básicos** tras comprobar que cubren los criterios mínimos exigidos (baudrates inválidos, inmutabilidad y persistencia).

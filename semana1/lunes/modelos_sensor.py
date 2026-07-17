@@ -29,7 +29,7 @@ class SensorStatus(Enum):
 class Reading:
     """
     Representa una lectura inmutable obtenida de un sensor.
-    Al ser frozen=True, actúa como un registro de solo lectura.
+    Al ser frozen=True, actúa como un registro de solo lectura (thread-safe y sin efectos secundarios).
     """
     timestamp: float        # Marca de tiempo en segundos (estilo Unix timestamp o time.monotonic)
     sensor_id: str          # Identificador único (ej. "DHT22_01", "ADC_CH3")
@@ -41,9 +41,9 @@ class Reading:
 
 class Sensor(Protocol):
     """
-    Interfaz estructural HAL para cualquier sensor en el sistema.
+    Interfaz estructural (HAL) para cualquier sensor en el sistema.
     Cualquier clase que implemente los métodos read() y get_id() será
-    considerada un 'Sensor' por mypy.
+    considerada un 'Sensor' por mypy, ¡sin necesidad de heredar de esta clase!
     """
     def read(self) -> Reading:
         """Obtiene una nueva lectura del hardware o simulación."""
@@ -55,7 +55,11 @@ class Sensor(Protocol):
 
 
 class DummyTempSensor:
-    """Driver simulado para un sensor de temperatura."""
+    """
+    Driver simulado para un sensor de temperatura.
+    Fíjate que NO escribimos 'class DummyTempSensor(Sensor):'.
+    Al implementar read() y get_id(), cumple implícitamente con el Protocolo Sensor.
+    """
     def __init__(self, sensor_id: str):
         # El guion bajo inicial indica convención de atributo protegido/privado en Python
         self._id = sensor_id
