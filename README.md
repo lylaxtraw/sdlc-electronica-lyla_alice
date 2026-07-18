@@ -50,5 +50,12 @@ Para correr el set completo de pruebas unitarias (los 12 escenarios mínimos dis
 ```bash
 pytest semana1/ -v
 ```
+---
+## 🧠 Reflexión SOLID: Del Hardware al Software Moderno
 
+La transición de escribir drivers en C embebido clásico a estructurar software modular en Python moderno bajo los principios SOLID representa un cambio radical en la mantenibilidad y evolución del código:
+
+1. **Responsabilidad Única (SRP):** En C es común mezclar la lectura del puerto serial, el parseo de bytes y la impresión en pantalla en una sola función monolítica. Al separar esto en clases especializadas (`UartConfig`, `MessageParser`, `DataRecorder`), podemos modificar el formato de guardado a JSON sin riesgo de romper la comunicación con el hardware.
+2. **Abierto/Cerrado (OCP) y Sustitución de Liskov (LSP):** En firmware tradicional, agregar un nuevo protocolo requiere añadir bloques `switch-case` o `if-else` interminables. Con polimorfismo y clases abstractas (`MessageParser`), podemos inyectar un nuevo analizador y el coordinador (`UartDevice`) lo consumirá transparentemente sin modificar su código base.
+3. **Inversión de Dependencias (DIP):** El mayor logro en testeabilidad. Al no acoplar el dispositivo a un hardware físico hardcodeado, inyectamos dependencias en el constructor, permitiendo realizar pruebas unitarias en aislamiento total dentro de la memoria RAM, logrando una cobertura del 89% en milisegundos sin requerir una placa o puerto físico conectado.
 ---
