@@ -9,9 +9,13 @@ class AnomalyDetector:
     def is_anomaly(self, reading: SensorReading) -> bool:
         if reading.category == "TEMPERATURE" and reading.value > self.max_temp:
             return True
+        if reading.category == "HUMIDITY" and reading.value > self.max_hum:
+            return True
         return False
 
     def get_anomaly_type(self, reading: SensorReading) -> str:
         if reading.category == "TEMPERATURE" and reading.value > self.max_temp:
             return "TEMP_THRESHOLD_BREACHED"
+        if reading.category == "HUMIDITY" and reading.value > self.max_hum:
+            return "HUM_THRESHOLD_BREACHED"
         return "NORMAL"
