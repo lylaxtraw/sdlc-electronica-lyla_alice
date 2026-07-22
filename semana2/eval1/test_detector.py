@@ -1,4 +1,3 @@
-import pytest
 from semana2.eval1.models import SensorReading
 from semana2.eval1.detector import AnomalyDetector
 
