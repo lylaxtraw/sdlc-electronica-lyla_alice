@@ -11,3 +11,9 @@ class SensorRegistry:
         if sensor_id not in self._sensors:
             raise SensorNotFoundError(f"El sensor '{sensor_id}' no está registrado.")
         return self._sensors[sensor_id]
+
+    def register(self, sensor_id: str, category: str) -> None:
+        self._sensors[sensor_id] = category
+
+    def count(self) -> int:
+        return len(self._sensors)
