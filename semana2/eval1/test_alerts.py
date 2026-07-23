@@ -1,11 +1,13 @@
 from pathlib import Path
+
 from pytest import CaptureFixture
-from semana2.eval1.models import SensorReading
+
 from semana2.eval1.alerts import (
     AlertManager,
     ConsoleAlertStrategy,
     FileAlertStrategy,
 )
+from semana2.eval1.models import SensorReading
 
 
 def test_console_alert_strategy_prints_message(capsys: CaptureFixture[str]) -> None:

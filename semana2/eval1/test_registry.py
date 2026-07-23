@@ -1,5 +1,6 @@
 import pytest
-from semana2.eval1.registry import SensorRegistry, SensorNotFoundError
+
+from semana2.eval1.registry import SensorNotFoundError, SensorRegistry
 
 
 def test_get_unknown_sensor_raises() -> None:

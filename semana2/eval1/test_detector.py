@@ -1,5 +1,5 @@
-from semana2.eval1.models import SensorReading
 from semana2.eval1.detector import AnomalyDetector
+from semana2.eval1.models import SensorReading
 
 
 def test_temperature_anomaly_detected_above_threshold() -> None:

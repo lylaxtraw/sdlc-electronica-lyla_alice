@@ -1,5 +1,7 @@
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Protocol, Sequence
+from typing import Protocol
+
 from semana2.eval1.models import SensorReading
 
 
