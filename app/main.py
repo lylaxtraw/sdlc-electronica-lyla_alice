@@ -1,6 +1,14 @@
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
- 
+
+# --- IMPORTS DE BASE DE DATOS ---
+from app.db import engine, Base
+from app.models.sensor import SensorModel   
+from app.models.reading import ReadingModel  
+
+# --- CREAR TABLAS ---
+Base.metadata.create_all(bind=engine)
+
 app = FastAPI(title="SensorHub API", version="0.1.0")
  
 # 1. El "Contrato de Entrada" (Como el formato esperado de una trama UART)
