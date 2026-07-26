@@ -93,3 +93,15 @@ La IA generó el contrato en `DEFINITION_OF_DONE.md`, el archivo de configuraci�
 - **Acepté la automatización del contrato de calidad:** Validé la configuración en `pyproject.toml` (`--cov-fail-under=80`, `strict=true` para mypy). Reflexioné que como ingeniero es ineficiente auditar estilos o cobertura a mano; delegar estas reglas a un sistema automatizado (CI local) asegura que los tests fallen si se viola la DoD.
 - **Acepté la integración mediante flujo Git profesional:** Adopté la recomendación de encapsular la configuración en una rama aislada (`feature/config-dod`) y simular un Pull Request local hacia `main`. Aunque trabajo solo, esto mantiene un historial limpio y respeta el estándar corporativo.
 - **Validé los artefactos Scrum con criterio propio:** Revisé el *Sprint Planning* asegurando que las tareas mantuvieran el rigor heurístico de $\le 4$ horas, y definí en la *Retrospectiva* una acción de mejora real: implementar un checklist de *scaffolding* para prevenir los problemas de entorno (`ModuleNotFoundError`) sufridos el día anterior.
+
+## Semana 2 · Entrada 5 (Viernes)
+Este día no cuenta con entrada ya que se trabajó los 4 días anteriores en el proyecto, por ende no se realizó ninguna modificación este día.
+
+****
+
+## Semana 3 · Entrada 1 (Lunes)
+Prompt: "Acompáñame a estructurar la capa inicial de presentación (routers) con FastAPI, definiendo modelos Pydantic estrictos, reconfigurando mis herramientas de calidad en pyproject.toml para analizar el nuevo paquete app/ y aplicando un commit por archivo."
+La IA propuso los comandos y el código necesario para establecer la estructura base del producto (app/), el contrato de datos y un endpoint inicial "mockeado". Acepté el diseño base pero reflexioné activamente sobre los mecanismos de protección de la API y la estrategia de versionado:
+- **Acepté la arquitectura orientada a producto y los contratos Pydantic:** Comprendí que mudar el desarrollo de carpetas de ejercicios a un paquete raíz (app/) con `__init__.py` es el paso crítico para un despliegue en la nube. Validé que usar Pydantic para definir entradas `(SensorReadingIn)` actúa exactamente como un validador de tramas de hardware, rechazando peticiones malformadas (como enviar un string en lugar de un float de temperatura) devolviendo un código 422 `(Unprocessable Entity)` sin que el sistema gaste recursos de procesamiento.
+- **Acepté el flujo de control de dependencias:** Rechacé depender de un pip freeze generado automáticamente que incluiría dependencias transitivas (ruido) y, en su lugar, acepté la práctica de curar manualmente el `requirements.txt` en la raíz.
+- **Acepté y ejecuté la integración mediante Commits Atómicos:** Implementé una estrategia de control de versiones aislando el trabajo del día en una rama `(feature/semana-3-dia-1)` y realizando commits individuales y atómicos por cada archivo modificado (e.g., `pyproject.toml`, `requirements.txt`, `app/main.py`), finalizando con un merge limpio hacia main para facilitar futuras revisiones por pares `(peer reviews)`.
