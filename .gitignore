@@ -219,3 +219,6 @@ __marimo__/
 
 #db
 .db
+
+#DS
+.DS_Store
