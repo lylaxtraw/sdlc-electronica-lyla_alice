@@ -2,9 +2,11 @@
 Módulo de testeo para el UartDevice
 """
 import pytest
+
 from semana1.uart_driver.config import UartConfig
+from semana1.uart_driver.device import DeviceNotConnectedError, UartDevice
 from semana1.uart_driver.parsers import NMEAParser
-from semana1.uart_driver.device import UartDevice, DeviceNotConnectedError
+
 
 @pytest.fixture
 def nmea() -> NMEAParser:
