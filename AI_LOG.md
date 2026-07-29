@@ -105,3 +105,31 @@ La IA propuso los comandos y el código necesario para establecer la estructura 
 - **Acepté la arquitectura orientada a producto y los contratos Pydantic:** Comprendí que mudar el desarrollo de carpetas de ejercicios a un paquete raíz (app/) con `__init__.py` es el paso crítico para un despliegue en la nube. Validé que usar Pydantic para definir entradas `(SensorReadingIn)` actúa exactamente como un validador de tramas de hardware, rechazando peticiones malformadas (como enviar un string en lugar de un float de temperatura) devolviendo un código 422 `(Unprocessable Entity)` sin que el sistema gaste recursos de procesamiento.
 - **Acepté el flujo de control de dependencias:** Rechacé depender de un pip freeze generado automáticamente que incluiría dependencias transitivas (ruido) y, en su lugar, acepté la práctica de curar manualmente el `requirements.txt` en la raíz.
 - **Acepté y ejecuté la integración mediante Commits Atómicos:** Implementé una estrategia de control de versiones aislando el trabajo del día en una rama `(feature/semana-3-dia-1)` y realizando commits individuales y atómicos por cada archivo modificado (e.g., `pyproject.toml`, `requirements.txt`, `app/main.py`), finalizando con un merge limpio hacia main para facilitar futuras revisiones por pares `(peer reviews)`.
+
+## Semana 3 · Entrada 2 (Martes)
+Prompt: "Configura la persistencia con SQLAlchemy 2.0 usando la sintaxis Mapped para ReadingModel y SensorModel, replicando el dominio de la semana 2 con una relación relacional." 
+La IA propuso la configuración del motor (engine) y la base de datos local SQLite. Acepté la implementación tras corregir la lógica de normalización y el manejo de tiempo:
+- **Acepté la normalización relacional:** Inicialmente la IA propuso un modelo plano. Corregí el diseño para implementar una relación 1:N (Un Sensor tiene muchas Lecturas), definiendo SensorModel como la tabla maestra de configuración y ReadingModel con una llave foránea (ForeignKey), ahorrando redundancia de datos
+- **Acepté el uso de la API tipada de SQLAlchemy 2.x:** Utilicé Mapped y mapped_column para asegurar que los modelos sean compatibles con mypy, actuando de forma tan estricta como un struct en C
+- **Corregí el manejo de fechas:** La IA sugirió utcnow(), el cual está deprecado en Python 3.12+. Cambié la implementación a datetime.now(timezone.utc) para garantizar la compatibilidad con el ecosistema moderno
+
+## Semana 3 · Entrada 3 (Miércoles)
+Prompt: "Implementa el patrón repositorio y la capa de servicio para lecturas, aplicando Inversión de Dependencias (DIP) mediante protocolos y validando la lógica con un repositorio fake en memoria." 
+La IA propuso la separación de responsabilidades y los ciclos de prueba para el servicio. Acepté la arquitectura tras resolver fallos críticos de inicialización:
+- **Acepté el desacoplamiento mediante DIP:** Validé el uso de ReadingRepository(Protocol). Esto permite que el servicio sea agnóstico a la infraestructura, pudiendo testear la lógica de negocio en milisegundos usando un FakeReadingRepository en RAM sin tocar el disco duro.
+- **Rechacé y corregí el fallo de registro de modelos:** Al ejecutar los tests, surgió un InvalidRequestError porque SQLAlchemy no encontraba el nombre '`SensorModel'`. Identifiqué que se debía a una importación perezosa; corregí el problema forzando la precarga de todos los modelos en `app/models/__init__.py`
+- **Acepté el incremento parcial de cobertura:** Logré un 62.69% de cobertura testeando la capa de servicio en aislamiento, comprendiendo que el 80% final llegaría tras cablear los routers el jueves
+
+## Semana 3 · Entrada 4 (Jueves)
+Prompt: "Conecta las capas con inyección de dependencias en FastAPI (Depends) y diseña los endpoints REST para lecturas incluyendo paginación y filtros por fecha." 
+La IA generó la estructura de los routers y la integración final. Acepté la propuesta pero realicé una corrección arquitectónica vital en la suite de pruebas:
+- **Acepté el uso de APIRouter y Depends:** Implementé la inyección de la sesión de base de datos (`get_db`) y del servicio de forma modular, permitiendo que cada endpoint declare sus necesidades de forma limpia.
+- **Rechacé y corregí el fallo de persistencia en los tests:** Los tests de integración fallaban con `OperationalError: no such table: readings`. Descubrí que el `TestClient` abría conexiones nuevas que entregaban bases de datos en memoria vacías. Corregí esto implementando `StaticPool` en `tests/test_api.py` para forzar una única conexión compartida durante toda la prueba.
+- **Validé el cumplimiento de la meta de calidad:** Con el cableado completo y los tests de integración, alcancé una cobertura del 89.38%, superando el estándar esperado del 80%.
+
+## Semana 3 · Entrada 5 (Viernes)
+Prompt: "Implementa el ejercicio integrador de SensorHub con arquitectura de 4 capas completa y validación física real que rechace valores fuera de rango según la configuración del sensor en la base de datos." 
+La IA propuso los repositorios y servicios finales para sensores y lecturas. Acepté la implementación tras un proceso de depuración técnica intensivo por inconsistencias de tipado:
+- **Acepté la "Validación Física Real":** El servicio ahora compara cada lectura contra el min_value y max_value configurados en la tabla de sensores. Comprobé mediante tests que el sistema rechaza unidades incorrectas `(error 400)` y valores imposibles `(error 422)`, actuando como un circuito de protección de hardware en software.
+- **Rechacé y corregí el tipado estricto para `Mypy`:** La IA inicialmente no manejó correctamente el retorno de SQLAlchemy 2.0 `(Sequence)`. Corregí manualmente 36 errores de `mypy` aplicando casting explícito a `list()` y definiendo todas las anotaciones de retorno faltantes `(no-untyped-def)`.
+- **Corregí incompatibilidades de Python 3.14:** Debido al uso de una versión experimental de Python, las dependencias inyectadas con valores por defecto lanzaban un `TypeError`. Corregí el error migrando toda la inyección de dependencias de los routers a la sintaxis moderna con `Annotated`, blindando el sistema para el futuro.
