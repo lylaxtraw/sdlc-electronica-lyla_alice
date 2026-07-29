@@ -2,8 +2,8 @@
 Módulo de procesamiento puro para lecturas de sensores.
 Todas las funciones aquí son sin efectos secundarios (pure functions).
 """
+from collections.abc import Sequence
 from dataclasses import replace
-from typing import Sequence
 
 from semana1.lunes.modelos_sensor import Reading, SensorStatus, SensorType
 
