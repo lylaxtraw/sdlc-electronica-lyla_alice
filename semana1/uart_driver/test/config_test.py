@@ -3,7 +3,9 @@ Módulo de testeo para el UARTConfig
 """
 
 import pytest
-from semana1.uart_driver.config import UartConfig, InvalidConfigurationError
+
+from semana1.uart_driver.config import InvalidConfigurationError, UartConfig
+
 
 @pytest.fixture
 def config() -> UartConfig:
