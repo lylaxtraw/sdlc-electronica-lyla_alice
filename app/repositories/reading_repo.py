@@ -1,29 +1,44 @@
 # app/repositories/reading_repo.py
-from typing import Protocol
+from collections.abc import Sequence
 from datetime import datetime
+from typing import Protocol
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+
 from app.models.reading import ReadingModel
 
+
 class ReadingRepository(Protocol):
-    def add(self, sensor_id: str, value: float, unit: str) -> ReadingModel: ...
+    """Interfaz para el repositorio de lecturas."""
+    def add(self, sensor_id: int, value: float, unit: str) -> ReadingModel: ...
+
     def get_by_id(self, reading_id: int) -> ReadingModel | None: ...
+
     def list_for_sensor(
         self, 
-        sensor_id: str, 
+        sensor_id: int, 
         limit: int = 50, 
         offset: int = 0, 
         from_date: datetime | None = None, 
         to_date: datetime | None = None
     ) -> list[ReadingModel]: ...
-    def update(self, reading_id: int, value: float | None = None, unit: str | None = None) -> ReadingModel | None: ...
+
+    def update(
+        self,
+        reading_id: int,
+        value: float | None = None,
+        unit: str | None = None,
+    ) -> ReadingModel | None: ...
+
     def delete(self, reading_id: int) -> bool: ...
 
 class SQLAlchemyReadingRepository:
-    def __init__(self, session: Session):
+    """Implementación del repositorio de lecturas usando SQLAlchemy."""
+    def __init__(self, session: Session) -> None:
         self.session = session
 
-    def add(self, sensor_id: str, value: float, unit: str) -> ReadingModel:
+    def add(self, sensor_id: int, value: float, unit: str) -> ReadingModel:
         reading = ReadingModel(sensor_id=sensor_id, value=value, unit=unit)
         self.session.add(reading)
         self.session.commit()
@@ -35,7 +50,7 @@ class SQLAlchemyReadingRepository:
 
     def list_for_sensor(
         self, 
-        sensor_id: str, 
+        sensor_id: int, 
         limit: int = 50, 
         offset: int = 0, 
         from_date: datetime | None = None, 
@@ -49,9 +64,17 @@ class SQLAlchemyReadingRepository:
             stmt = stmt.where(ReadingModel.created_at <= to_date)
             
         stmt = stmt.offset(offset).limit(limit)
-        return list(self.session.scalars(stmt).all())
+        # scalars().all() devuelve Sequence[ReadingModel], lo convertimos a list para mypy
+        results: Sequence[ReadingModel] = self.session.scalars(stmt).all()
+        return list(results)
 
-    def update(self, reading_id: int, value: float | None = None, unit: str | None = None) -> ReadingModel | None:
+    def update(
+            self, 
+            reading_id: int, 
+            value: float | None = None, 
+            unit: str | None = None
+            ) -> ReadingModel | None:
+        
         reading = self.get_by_id(reading_id)
         if not reading:
             return None
