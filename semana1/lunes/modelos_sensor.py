@@ -2,11 +2,11 @@
 Módulo de modelos de dominio para sensores.
 Implementa estructuras de datos inmutables y fuertemente tipadas.
 """
-from dataclasses import dataclass
-from enum import Enum, auto
-from typing import Optional, Protocol
 import random
 import time
+from dataclasses import dataclass
+from enum import Enum, auto
+from typing import Protocol
 
 
 class SensorType(Enum):
@@ -37,7 +37,7 @@ class Reading:
     value: float            # Valor medido
     status: SensorStatus    # Estado del hardware al medir
     unit: str               # Unidad de medida ("C", "%", "hPa", "V")
-    error_msg: Optional[str] = None  # Mensaje opcional si status == ERROR
+    error_msg: str | None = None  # Mensaje opcional si status == ERROR
 
 class Sensor(Protocol):
     """
