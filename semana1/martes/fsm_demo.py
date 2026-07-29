@@ -1,5 +1,6 @@
 from enum import Enum, auto
- 
+
+
 class TrafficLightState(Enum):
     RED = auto()
     YELLOW = auto()
