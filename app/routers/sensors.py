@@ -1,3 +1,4 @@
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -40,7 +41,7 @@ def get_sensor(
 @router.post("/", response_model=SensorOut, status_code=201)
 def create_sensor(
     payload: SensorCreate, 
-    service: SensorService = get_sensor_service_dependency
+    service: Annotated[SensorService, Depends(get_sensor_service)] # Usar Annotated
 ) -> SensorOut:
     return service.create_sensor(payload) # type: ignore
 
