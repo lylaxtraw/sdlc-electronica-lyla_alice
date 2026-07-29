@@ -1,21 +1,24 @@
-# app/schemas/reading.py
-from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 
-class ReadingCreate(BaseModel):
-    value: float = Field(..., description="Valor medido por el sensor")
-    unit: str = Field(..., max_length=10, description="Unidad de medida (ej. C, %)")
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class ReadingBase(BaseModel):
+    value: float = Field(..., examples=[23.5])
+    unit: str = Field(..., examples=["C"])
+
+class ReadingCreate(ReadingBase):
+    """Esquema para crear una lectura"""
+    pass
 
 class ReadingUpdate(BaseModel):
-    value: float | None = Field(None, description="Nuevo valor medido")
-    unit: str | None = Field(None, max_length=10, description="Nueva unidad de medida")
+    """Esquema para actualizar una lectura"""
+    value: float | None = None
+    unit: str | None = None
 
-class ReadingResponse(BaseModel):
+class ReadingOut(ReadingBase):
+    """Esquema para la salida de una lectura"""
     id: int
-    sensor_id: str
-    value: float
-    unit: str
+    sensor_id: int
     created_at: datetime
-
-    # Permite a Pydantic leer directamente instancias del ORM de SQLAlchemy
     model_config = ConfigDict(from_attributes=True)
