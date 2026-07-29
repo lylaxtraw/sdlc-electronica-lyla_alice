@@ -1,15 +1,24 @@
 # app/repositories/reading_repo.py
 from typing import Protocol
+from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.models.reading import ReadingModel
 
-# 1. El Contrato (DIP)
 class ReadingRepository(Protocol):
     def add(self, sensor_id: str, value: float, unit: str) -> ReadingModel: ...
-    def list_for_sensor(self, sensor_id: str) -> list[ReadingModel]: ...
+    def get_by_id(self, reading_id: int) -> ReadingModel | None: ...
+    def list_for_sensor(
+        self, 
+        sensor_id: str, 
+        limit: int = 50, 
+        offset: int = 0, 
+        from_date: datetime | None = None, 
+        to_date: datetime | None = None
+    ) -> list[ReadingModel]: ...
+    def update(self, reading_id: int, value: float | None = None, unit: str | None = None) -> ReadingModel | None: ...
+    def delete(self, reading_id: int) -> bool: ...
 
-# 2. La Implementación Real (Producción)
 class SQLAlchemyReadingRepository:
     def __init__(self, session: Session):
         self.session = session
@@ -18,10 +27,46 @@ class SQLAlchemyReadingRepository:
         reading = ReadingModel(sensor_id=sensor_id, value=value, unit=unit)
         self.session.add(reading)
         self.session.commit()
-        self.session.refresh(reading)  # Recarga el objeto para obtener su ID generado
+        self.session.refresh(reading)
         return reading
 
-    def list_for_sensor(self, sensor_id: str) -> list[ReadingModel]:
-        # Sintaxis moderna de SQLAlchemy 2.0
+    def get_by_id(self, reading_id: int) -> ReadingModel | None:
+        return self.session.get(ReadingModel, reading_id)
+
+    def list_for_sensor(
+        self, 
+        sensor_id: str, 
+        limit: int = 50, 
+        offset: int = 0, 
+        from_date: datetime | None = None, 
+        to_date: datetime | None = None
+    ) -> list[ReadingModel]:
         stmt = select(ReadingModel).where(ReadingModel.sensor_id == sensor_id)
+        
+        if from_date:
+            stmt = stmt.where(ReadingModel.created_at >= from_date)
+        if to_date:
+            stmt = stmt.where(ReadingModel.created_at <= to_date)
+            
+        stmt = stmt.offset(offset).limit(limit)
         return list(self.session.scalars(stmt).all())
+
+    def update(self, reading_id: int, value: float | None = None, unit: str | None = None) -> ReadingModel | None:
+        reading = self.get_by_id(reading_id)
+        if not reading:
+            return None
+        if value is not None:
+            reading.value = value
+        if unit is not None:
+            reading.unit = unit
+        self.session.commit()
+        self.session.refresh(reading)
+        return reading
+
+    def delete(self, reading_id: int) -> bool:
+        reading = self.get_by_id(reading_id)
+        if not reading:
+            return False
+        self.session.delete(reading)
+        self.session.commit()
+        return True
