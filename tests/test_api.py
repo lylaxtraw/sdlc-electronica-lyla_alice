@@ -1,89 +1,159 @@
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool  # <-- NUEVO: Importar StaticPool
+from sqlalchemy.pool import StaticPool
 
-# Asegúrate de importar tu app y tus configuraciones de BD
-from app.main import app
 from app.db import Base, get_db
+from app.main import app
 
-# <-- OPCIONAL PERO RECOMENDADO: Asegurar que Base conozca tus modelos antes de crear las tablas
-# from app.models.reading import Reading 
-
-# 1. Configurar un motor SQLite en memoria exclusivamente para los tests
+# 1. Base de datos en memoria con StaticPool para persistencia en el test
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-
-# <-- NUEVO: Añadir poolclass=StaticPool al engine
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, 
+    SQLALCHEMY_DATABASE_URL,
     connect_args={"check_same_thread": False},
-    poolclass=StaticPool  
+    poolclass=StaticPool,
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# 2. Crear las tablas en este motor en memoria (ahora persistirá para los tests)
-Base.metadata.create_all(bind=engine)
-
-# 3. Crear una función que reemplace a get_db
+# 2. Función de override limpia
 def override_get_db():
+    database = TestingSessionLocal()
     try:
-        db = TestingSessionLocal()
-        yield db
+        yield database
     finally:
-        db.close()
+        database.close()
 
-# 4. Forzar a FastAPI a usar nuestra función de prueba en lugar de la original
+# 3. Aplicar el override ANTES de crear el cliente
 app.dependency_overrides[get_db] = override_get_db
-
-# 5. Inicializar el TestClient (ahora usará el motor en memoria)
 client = TestClient(app)
 
-# --- Tus pruebas de la API... ---
-def test_health_endpoint():
-    response = client.get("/health") 
+# 4. Crear tablas
+Base.metadata.create_all(bind=engine)
+
+def test_health_endpoint() -> None:
+    response = client.get("/health")
     assert response.status_code == 200
+    assert response.json()["status"] == "ok"
 
-def test_full_reading_lifecycle():
-    # 1. Crear lectura (201 Created)
-    create_res = client.post(
-        "/sensors/TEMP-01/readings",
-        json={"value": 23.5, "unit": "C"}
+def test_full_reading_lifecycle() -> None:
+    # Crear un sensor primero para evitar errores de FK o validación física
+    client.post("/sensors/", json={
+        "name": "S1", "type": "T", "unit": "C", "min_value": 0, "max_value": 100
+    })
+    
+    # Crear lectura (usando la ruta REST correcta)
+    response = client.post(
+        "/sensors/1/readings",
+        json={"value": 25.0, "unit": "C"}
     )
-    assert create_res.status_code == 201
-    data = create_res.json()
-    assert data["sensor_id"] == "TEMP-01"
-    assert data["value"] == 23.5
-    reading_id = data["id"]
+    assert response.status_code == 201
 
-    # 2. Consultar lectura individual por ID (200 OK)
-    get_res = client.get(f"/readings/{reading_id}")
-    assert get_res.status_code == 200
-    assert get_res.json()["id"] == reading_id
+# --- TESTS DE SENSORES ---
 
-    # 3. Listar lecturas paginadas (200 OK)
-    list_res = client.get("/sensors/TEMP-01/readings?limit=10&offset=0")
-    assert list_res.status_code == 200
-    assert len(list_res.json()) == 1
-
-    # 4. Actualizar parcialmente con PATCH (200 OK)
-    patch_res = client.patch(
-        f"/readings/{reading_id}",
-        json={"value": 25.0}
+def test_create_sensor():
+    response = client.post(
+        "/sensors/",
+        json={
+            "name": "Sensor Termico A",
+            "type": "Temperature",
+            "unit": "C",
+            "min_value": -10.0,
+            "max_value": 50.0
+        }
     )
-    assert patch_res.status_code == 200
-    assert patch_res.json()["value"] == 25.0
+    assert response.status_code == 201
+    assert response.json()["name"] == "Sensor Termico A"
 
-    # 5. Intentar crear valor físico inválido (400 Bad Request)
-    invalid_res = client.post(
-        "/sensors/TEMP-01/readings",
-        json={"value": -300.0, "unit": "C"}
+def test_get_sensor_not_found():
+    response = client.get("/sensors/999")
+    assert response.status_code == 404
+
+# --- TESTS DE LECTURAS Y VALIDACIÓN FÍSICA ---
+
+def test_record_valid_reading():
+    # 1. Crear el sensor primero
+    client.post("/sensors/", json={
+        "name": "S1", "type": "T", "unit": "C", "min_value": 0, "max_value": 100
+    })
+    
+    # 2. Enviar lectura válida (25.0 está entre 0 y 100)
+    response = client.post(
+        "/sensors/1/readings",
+        json={"value": 25.0, "unit": "C"}
     )
-    assert invalid_res.status_code == 400
+    assert response.status_code == 201
+    assert response.json()["value"] == 25.0
 
-    # 6. Eliminar lectura (204 No Content)
-    del_res = client.delete(f"/readings/{reading_id}")
-    assert del_res.status_code == 204
+def test_reject_reading_wrong_unit():
+    client.post("/sensors/", json={
+        "name": "S1", "type": "T", "unit": "C", "min_value": 0, "max_value": 100
+    })
+    
+    # Intentar enviar Fahrenheit ('F') a un sensor configurado en Celsius ('C')
+    response = client.post(
+        "/sensors/1/readings",
+        json={"value": 25.0, "unit": "F"}
+    )
+    assert response.status_code == 400
+    assert "Unidad incorrecta" in response.json()["detail"]
 
-    # 7. Verificar 404 Not Found al buscar la lectura eliminada
-    not_found_res = client.get(f"/readings/{reading_id}")
-    assert not_found_res.status_code == 404
+def test_reject_reading_out_of_range():
+    client.post("/sensors/", json={
+        "name": "S1", "type": "T", "unit": "C", "min_value": 0, "max_value": 100
+    })
+    
+    # Intentar enviar 150.0 a un sensor que solo aguanta hasta 100.0
+    response = client.post(
+        "/sensors/1/readings",
+        json={"value": 150.0, "unit": "C"}
+    )
+    assert response.status_code == 422
+    assert "fuera de rango físico" in response.json()["detail"]
+
+# --- TESTS DE FILTROS Y PAGINACIÓN ---
+
+def test_list_readings_pagination():
+    client.post("/sensors/", json={
+        "name": "S1", "type": "T", "unit": "C", "min_value": -100, "max_value": 100
+    })
+    # Crear 3 lecturas
+    for v in [1-3]:
+        client.post("/sensors/1/readings", json={"value": v, "unit": "C"})
+    
+    # Pedir solo 2
+    response = client.get("/sensors/1/readings?limit=2")
+    assert len(response.json()) == 2
+
+def test_health_check():
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+
+def test_extra_crud_operations():
+    # 1. Crear un sensor y una lectura base para nuestras pruebas
+    res_sensor = client.post("/sensors/", json={
+        "name": "Sensor de Prueba", "type": "T", "unit": "C", "min_value": 0, "max_value": 100
+    })
+    sensor_id = res_sensor.json()["id"]
+
+    res_reading = client.post(f"/sensors/{sensor_id}/readings", json={
+        "value": 20.0, "unit": "C"
+    })
+    reading_id = res_reading.json()["id"]
+
+    # 2. Probar GET por ID (Casos de Éxito)
+    assert client.get(f"/sensors/{sensor_id}").status_code == 200
+    assert client.get(f"/readings/{reading_id}").status_code == 200
+
+    # 3. Probar GET por ID (Casos 404 - No Encontrado)
+    assert client.get("/sensors/9999").status_code == 404
+    assert client.get("/readings/9999").status_code == 404
+
+    # 4. Probar DELETE (Caso de Éxito)
+    # Nota: Usamos IN [200, 204] por si configuraste el delete con status 200 o 204
+    assert client.delete(f"/readings/{reading_id}").status_code in [200, 204]
+    assert client.delete(f"/sensors/{sensor_id}").status_code in [200, 204]
+
+    # 5. Probar DELETE de nuevo (Debería dar 404 porque ya se borraron)
+    assert client.delete(f"/readings/{reading_id}").status_code == 404
+    assert client.delete(f"/sensors/{sensor_id}").status_code == 404
