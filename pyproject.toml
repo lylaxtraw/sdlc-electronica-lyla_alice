@@ -1,5 +1,6 @@
 [tool.pytest.ini_options]
-# Actualizamos la ruta de cobertura para que evalúe la carpeta 'app'
+# Pytest solo debe contener los argumentos de configuración propios de pytest. Para cambiar la ruta, solo modifica --cov
+# con "--cov={carpeta/archivo que quieres testear}"
 addopts = "--cov=app --cov-report=term-missing --cov-fail-under=80"
 
 [tool.ruff]
