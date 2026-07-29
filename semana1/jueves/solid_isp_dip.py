@@ -3,6 +3,7 @@ Módulo que implementa los principios SOLID: I (ISP) y D (DIP).
 Demuestra segregación de interfaces e inversión de dependencias con Protocol.
 """
 from typing import Protocol
+
 from semana1.lunes.modelos_sensor import Reading as SensorReading
 
 # =====================================================================
