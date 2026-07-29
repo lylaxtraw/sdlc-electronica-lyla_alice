@@ -4,14 +4,15 @@ Demuestra que la segregación de interfaces funciona y que la inyección de depe
 hace testeable al DataProcessor sin una base de datos real.
 """
 import time
-from semana1.lunes.modelos_sensor import Reading as SensorReading
-from semana1.lunes.modelos_sensor import SensorStatus, SensorType
+
 from semana1.jueves.solid_isp_dip import (
     DataProcessor,
     InMemoryRepository,
     SimpleADCSensor,
     SmartActuator,
 )
+from semana1.lunes.modelos_sensor import Reading as SensorReading
+from semana1.lunes.modelos_sensor import SensorStatus, SensorType
 
 # =====================================================================
 # TESTS PARA I (ISP - Segregación de Interfaces)
