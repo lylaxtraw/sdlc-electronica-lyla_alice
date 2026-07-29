@@ -48,6 +48,13 @@ puedes abrir `pyproject.toml` y configurar la ruta:
 python -m pytest > pytest_cov.txt
 ```
 
+## Ejecución de FastAPI
+Para correr cualquier API dentro de este repositorio, se usa el siguiente código (Si salta el error 500, asegúrese de borrar el sensorhub.db que se generó la última vez):
+
+```bash
+uvicorn app.main:app --reload
+```
+
 ---
 
 ## **Semana 1: UART driver**
