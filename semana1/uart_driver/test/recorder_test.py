@@ -1,9 +1,12 @@
 """
 Módulo de pruebas unitarias para el módulo recorder.py.
 """
-import pytest
 from pathlib import Path
+
+import pytest
+
 from semana1.uart_driver.recorder import DataRecorder
+
 
 @pytest.fixture
 def recorder(tmp_path: Path) -> DataRecorder:
