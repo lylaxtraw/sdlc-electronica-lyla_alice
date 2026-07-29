@@ -1,21 +1,21 @@
-# app/main.py
 from fastapi import FastAPI
-from app.db import engine, Base
-from app.models import SensorModel, ReadingModel
-from app.routers.readings import router as readings_router
 
-# Inicializar tablas
+from app.db import Base, engine
+from app.routers import readings, sensors
+
+"""Fabricación de la base de datos (semana 4 usaremos Alembic)"""
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="SensorHub API",
-    description="API RESTful para monitoreo de sensores industriales",
-    version="0.1.0"
+    description="API completa con arquitectura en 4 capas y validación física.",
+    version="1.0.0"
 )
 
-# Incluir las rutas modulares
-app.include_router(readings_router)
+"""Inclusión de Routers"""
+app.include_router(sensors.router)
+app.include_router(readings.router)
 
-@app.get("/health", tags=["Health"])
-def health_check():
-    return {"status": "ok"}
+@app.get("/health", tags=["System"])
+def health() -> dict[str, str]:
+    return {"status": "ok", "service": "SensorHub"}
