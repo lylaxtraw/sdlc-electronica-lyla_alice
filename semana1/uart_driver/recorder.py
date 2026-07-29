@@ -3,8 +3,9 @@ Módulo de grabación de datos.
 Aplica SRP al dedicarse únicamente a la persistencia en formato JSON-lines (.jsonl).
 """
 import json
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 
 class DataRecorder:
