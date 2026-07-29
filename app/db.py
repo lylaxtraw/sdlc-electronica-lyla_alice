@@ -1,7 +1,8 @@
 # app/db.py
-from typing import Generator
+from collections.abc import Generator
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 engine = create_engine("sqlite:///sensorhub.db", connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
