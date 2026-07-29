@@ -1,19 +1,4 @@
 # sdlc-electronica-lyla_alice
-## **Semana 1: UART driver**
-Este módulo contiene la reimplementación de un driver UART de estilo embebido (tradicionalmente procedural, acoplado y dependiente de estados globales en C) transformado en una arquitectura modular, orientada a objetos y estrictamente tipada en Python moderno.
-
-El diseño se enfoca en eliminar buffers globales y el acoplamiento de protocolos, facilitando la instanciación múltiple del dispositivo y permitiendo pruebas unitarias en aislamiento total del hardware físico.
-
-## Estructura del Módulo
-
-La arquitectura está completamente segregada bajo los principios SOLID, dividiéndose en los siguientes componentes esenciales:
-
-* **`config.py` (Principio de Responsabilidad Única - SRP):** Contiene la clase `UartConfig` diseñada como una `dataclass` inmutable (`frozen=True`). Se encarga exclusivamente de encapsular y validar en su construcción los parámetros del puerto (baudrate estándar, paridad y bits de parada), lanzando excepciones controladas si los parámetros de hardware son inválidos.
-* **`parsers.py` (Principios OCP, LSP e ISP):** Define el contrato abstracto `MessageParser` mediante una clase base (`ABC`). Las implementaciones concretas (`ModbusParser` para tramas binarias RTU y `NMEAParser` para sentencias de texto GPS `$GPGGA`) extienden este contrato mediante polimorfismo, permitiendo que la tubería de análisis inspeccione y procese datos sin modificar la lógica base.
-* **`device.py` (Principio de Inversión de Dependencias - DIP):** Implementa la clase `UartDevice`. El dispositivo no instancia internamente sus configuraciones ni hardcodea el protocolo; en su lugar, recibe la abstracción de `UartConfig` y `MessageParser` a través de **Inyección de Dependencias** en el constructor. Incluye un buffer de recepción simulado para pruebas en entornos sin hardware real.
-* **`recorder.py` (Principio de Responsabilidad Única - SRP):** Clase `DataRecorder` dedicada únicamente a la persistencia en almacenamiento local de los datos procesados. Guarda la información estructurada utilizando el formato estándar **JSON-lines (`.jsonl`)**, donde cada registro es una línea independiente autodescriptiva.
-
----
 
 ## Instalación y Configuración del Entorno
 
@@ -39,18 +24,46 @@ Para configurar el entorno de ejecución profesional y garantizar el aislamiento
     pip install pytest pytest-cov ruff mypy fastapi uvicorn sqlalchemy alembic httpx
     ```
 
----
-
 ## Ejecución de la Suite de Pruebas y Auditoría Estática
 
 La verificación del comportamiento y la calidad del código se ejecuta de manera centralizada desde el **directorio raíz del repositorio** utilizando la santísima trinidad de herramientas de análisis en Python:
 
-### 1. Pruebas Unitarias Automatizadas (`pytest`)
-Para correr el set completo de pruebas unitarias (los 12 escenarios mínimos distribuidos entre las clases de configuración, parsers, ciclo de vida del dispositivo y persistencia en archivos):
+### 1. Verificación de Ausencia de Errores (`ruff check` y `mypy`)
+Antes de correr las pruebas, se debe verificar que los archivos no cuenten con ningún error dentro de ellos. Para ello, debes escribir los siguientes comandos en tu terminal:
+
+* Para ruff:
+    ```bash
+    python -m ruff check {carpeta/archivo} --fix  > errores_ruff.txt
+    ```
+* Para mypy:
+    ```bash
+    python -m mypy {carpeta/archivo} > errores_mypy.txt
+    ```
+
+### 2. Pruebas Unitarias Automatizadas (`pytest`)
+Para correr el set completo de pruebas unitarias. Para especificar a dónde quieres correr el comando,
+puedes abrir `pyproject.toml` y configurar la ruta:
+
 ```bash
-pytest semana1/ -v
+python -m pytest > pytest_cov.txt
 ```
+
 ---
+
+## **Semana 1: UART driver**
+Este módulo contiene la reimplementación de un driver UART de estilo embebido (tradicionalmente procedural, acoplado y dependiente de estados globales en C) transformado en una arquitectura modular, orientada a objetos y estrictamente tipada en Python moderno.
+
+El diseño se enfoca en eliminar buffers globales y el acoplamiento de protocolos, facilitando la instanciación múltiple del dispositivo y permitiendo pruebas unitarias en aislamiento total del hardware físico.
+
+## Estructura del Módulo
+
+La arquitectura está completamente segregada bajo los principios SOLID, dividiéndose en los siguientes componentes esenciales:
+
+* **`config.py` (Principio de Responsabilidad Única - SRP):** Contiene la clase `UartConfig` diseñada como una `dataclass` inmutable (`frozen=True`). Se encarga exclusivamente de encapsular y validar en su construcción los parámetros del puerto (baudrate estándar, paridad y bits de parada), lanzando excepciones controladas si los parámetros de hardware son inválidos.
+* **`parsers.py` (Principios OCP, LSP e ISP):** Define el contrato abstracto `MessageParser` mediante una clase base (`ABC`). Las implementaciones concretas (`ModbusParser` para tramas binarias RTU y `NMEAParser` para sentencias de texto GPS `$GPGGA`) extienden este contrato mediante polimorfismo, permitiendo que la tubería de análisis inspeccione y procese datos sin modificar la lógica base.
+* **`device.py` (Principio de Inversión de Dependencias - DIP):** Implementa la clase `UartDevice`. El dispositivo no instancia internamente sus configuraciones ni hardcodea el protocolo; en su lugar, recibe la abstracción de `UartConfig` y `MessageParser` a través de **Inyección de Dependencias** en el constructor. Incluye un buffer de recepción simulado para pruebas en entornos sin hardware real.
+* **`recorder.py` (Principio de Responsabilidad Única - SRP):** Clase `DataRecorder` dedicada únicamente a la persistencia en almacenamiento local de los datos procesados. Guarda la información estructurada utilizando el formato estándar **JSON-lines (`.jsonl`)**, donde cada registro es una línea independiente autodescriptiva.
+
 ## Reflexión SOLID: Del Hardware al Software Moderno
 
 La transición de escribir drivers en C embebido clásico a estructurar software modular en Python moderno bajo los principios SOLID representa un cambio radical en la mantenibilidad y evolución del código:
@@ -60,3 +73,44 @@ La transición de escribir drivers en C embebido clásico a estructurar software
 3. **Inversión de Dependencias (DIP):** El mayor logro en testeabilidad. Al no acoplar el dispositivo a un hardware físico hardcodeado, inyectamos dependencias en el constructor, permitiendo realizar pruebas unitarias en aislamiento total dentro de la memoria RAM, logrando una cobertura del 89% en milisegundos sin requerir una placa o puerto físico conectado.
 
 ---
+
+## Semana 2: IoT Monitoring Core (Scrum & TDD)
+Este módulo marca la transición de un flujo de trabajo de "superloop" hacia un ciclo de vida de desarrollo de software (SDLC) profesional
+Se implementó el núcleo de un sistema de monitoreo para una bodega industrial utilizando Desarrollo Guiado por Pruebas (TDD) estricto y metodologías ágiles.
+El diseño garantiza que ninguna línea de código de producción sea escrita sin una especificación técnica previa en forma de prueba unitaria, alcanzando una cobertura del 99%.
+
+### **Estructura del Módulo**
+La lógica de negocio se fragmentó en componentes desacoplados siguiendo los requerimientos del "Sprint 0":
+* `**backlog.md**` (Ingeniería de Requisitos): Contiene 11 User Stories redactadas bajo el estándar Gherkin (Given/When/Then). Cada historia actúa como el datasheet exacto de una funcionalidad, eliminando ambigüedades mediante criterios de aceptación verificables y priorización MoSCoW.
+* `**registry.py**` (Gestión de Inventario): Implementa la clase SensorRegistry. Fue el primer componente desarrollado bajo el ciclo Red-Green-Refactor, asegurando la gestión de sensores únicos y el manejo robusto de excepciones como SensorNotFoundError
+* `**detector.py**` (Lógica de Umbrales): Clase AnomalyDetector. Aplica Inyección de Dependencias al recibir los umbrales de temperatura (>35°C) y humedad (>80%) en el constructor. Esto permite modificar las reglas de negocio sin alterar el código fuente
+* `**alerts.py**` (Patrón Strategy): Implementa el AlertManager. Utiliza el Patrón Estrategia para alternar de forma transparente entre notificaciones por consola (ConsoleAlert) y persistencia en archivos (FileAlert), cumpliendo con el principio de Inversión de Dependencias.
+
+## Reflexión TDD: De la "Protoboard" al Banco de Pruebas Automatizado
+
+El salto del firmware al software asistido por procesos ágiles redefine la fiabilidad del sistema:
+Gherkin como Especificación Técnica: En electrónica, un sensor se define por su rango y tiempo de respuesta; en software, Gherkin traduce esa precisión al comportamiento del sistema (ej. "el sistema debe alertar en exactamente 35.1°C").
+
+* **TDD como Filtro de Calidad:** Escribir el test antes que el código (TDD) frente a escribirlo después (TAD) es la diferencia entre diseñar un circuito con simulación previa o intentar arreglarlo después de que se quemó un componente. El historial de Git (RED → GREEN → REFACTOR) es la evidencia innegociable de este rigor.
+* **Inyección de Dependencias para Simulación:** Al inyectar un repositorio en memoria (FakeReadingRepository), podemos validar la lógica de detección de anomalías sin hardware real y sin tocar el disco duro, permitiendo ejecuciones de prueba en milisegundos.
+
+---
+
+## Semana 3: SensorHub API (Arquitectura en Capas & Persistencia)
+En esta etapa, el proyecto evoluciona de ejercicios aislados a un producto real y escalable. Se diseñó una Arquitectura en 4 Capas conectada a una base de datos relacional (SQLite) mediante SQLAlchemy 2.0, cumpliendo con las convenciones internacionales de las APIs RESTful.
+El sistema integra validación física real, rechazando tramas de datos imposibles antes de que lleguen a la capa de persistencia.
+
+### **Estructura del Producto (app/)**
+La arquitectura se segregó para permitir la escalabilidad y el intercambio de componentes de infraestructura (como la base de datos) sin afectar la interfaz de usuario:
+* `**routers/**` (Capa de Presentación): Gestiona las peticiones HTTP mediante FastAPI. Implementa endpoints REST profesionales (ej. `POST /sensors/{id}/readings`) con paginación y filtros de fecha.
+* `**services/**` (Capa de Negocio): Es el "cerebro" del sistema. Aquí se aplica la Validación Física Real, comparando cada lectura contra los límites configurados en la base de datos para el sensor específico.
+* `**repositories/**` (Capa de Acceso a Datos): Encapsula toda la interacción con SQLAlchemy. Aislar las consultas SQL en esta capa permite que el resto del sistema sea agnóstico al motor de base de datos utilizado (SQLite, PostgreSQL, etc.).
+* `**models/ y schemas/**` (Definición de Contratos): Los modelos ORM definen la estructura relacional (Sensores 1:N Lecturas) con sintaxis Mapped. Los esquemas de Pydantic actúan como el contrato de comunicación, validando y serializando los datos de entrada y salida.
+
+## Reflexión de Arquitectura: El Software como Sistema de Protección
+
+La implementación de una API profesional con arquitectura limpia refuerza la robustez del "SensorHub":
+Pydantic como Protección de Capa Física: Al igual que un circuito de protección contra sobretensión, Pydantic escanea las tramas de datos (JSON) y las rechaza con un error 422 (Unprocessable Entity) si detecta ruido o tipos de datos incorrectos antes de que el microcontrolador gaste ciclos procesándolos.
+
+* **SQLAlchemy como Memoria No Volátil:** Pasamos de usar diccionarios en RAM a una base de datos persistente. El uso de índices y transacciones ACID garantiza que los datos de la bodega industrial sean íntegros y consultables en milisegundos, funcionando como una Lookup Table (LUT) de alto rendimiento.
+* **Arquitectura en Capas como DIP a Escala:** La separación total permite que los Routers dependan de abstracciones de los Servicios, y estos de los Repositorios. Esto facilitó alcanzar una cobertura de integración del 89.38% mediante el uso de StaticPool en los tests para simular una persistencia compartida en memoria RAM durante la suite de pruebas.
