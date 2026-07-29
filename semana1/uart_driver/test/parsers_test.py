@@ -2,7 +2,9 @@
 Módulo de testeo para el UARTParser
 """
 import pytest
+
 from semana1.uart_driver.parsers import ModbusParser, NMEAParser
+
 
 @pytest.fixture
 def modbus() -> ModbusParser:
