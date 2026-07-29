@@ -2,6 +2,7 @@
 Pruebas unitarias para validar los principios S, O y L según la especificación exacta.
 """
 import pytest
+
 from semana1.lunes.modelos_sensor import SensorType
 from semana1.miercoles.solid_srp_ocp_lsp import (
     AnomalyDetector,
