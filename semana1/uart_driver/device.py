@@ -1,7 +1,8 @@
 """
 Módulo del dispositivo UART.
 """
-from typing import Any, Optional
+from typing import Any
+
 from semana1.uart_driver.config import UartConfig
 from semana1.uart_driver.parsers import MessageParser
 
@@ -42,7 +43,7 @@ class UartDevice:
         """Método auxiliar para cargar bytes en el buffer de pruebas sin hardware real."""
         self._simulated_rx_buffer += data
 
-    def read_and_parse(self) -> Optional[dict[str, Any]]:
+    def read_and_parse(self) -> dict[str, Any] | None:
         """
         Lee datos del buffer de recepción, verifica si el parser inyectado puede
         procesarlos con can_parse() y los convierte en un diccionario con parse().
