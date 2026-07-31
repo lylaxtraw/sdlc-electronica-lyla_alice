@@ -223,3 +223,96 @@ Scenario: Activación de alerta crítica combinada
 * When ambas lecturas son procesadas por el motor de reglas
 * Then el sistema emite una alarma de grado "CRITICAL_ENVIRONMENTAL_HAZARD"
 * And activa simultáneamente las alertas en consola y en el archivo de bitácora con prioridad alta
+
+## US-12: Contenerización de la API con Docker
+**Etiqueta:** `MoSCoW: Must` | **Story Points:** `3`
+Como desarrolladora backend,
+quiero empaquetar mi aplicación FastAPI en una imagen de Docker,
+para garantizar que el código se ejecute en un entorno idéntico independientemente de la máquina host.
+
+Scenario: Construcción exitosa de la imagen optimizada
+* Given un Dockerfile configurado con una imagen base ligera
+* When ejecuto el comando de construcción docker build
+*Then el sistema genera una imagen de contenedor almacenando las dependencias en caché
+* And la imagen final contiene únicamente el código y las dependencias necesarias
+
+Scenario: Ejecución del contenedor en el puerto local
+* Given la imagen de Docker construida correctamente
+* When levanto el contenedor mapeando el puerto 8000
+* Then la API responde exitosamente a las peticiones HTTP en localhost:8000
+* And los logs de Uvicorn se reflejan en la salida estándar del contenedor
+
+## US-13: Orquestación local con Docker Compose y PostgreSQL
+**Etiqueta:** `MoSCoW: Must` | **Story Points:** `5`
+Como ingeniera DevOps,
+quiero utilizar Docker Compose para levantar la API y una base de datos PostgreSQL simultáneamente,
+para simular el entorno de producción localmente con un solo comando sin instalaciones manuales.
+
+Scenario: Levantamiento simultáneo de servicios
+* Given un archivo `docker-compose.yml` con los servicios api y db
+* When ejecuto el comando docker compose up
+* Then el motor de Docker descarga la imagen oficial de PostgreSQL
+* And levanta la base de datos inyectando las credenciales por variables de entorno
+* And levanta la API garantizando que la red interna entre ambos funcione
+
+Scenario: Conexión de la API a la base de datos orquestada
+* Given ambos contenedores en ejecución dentro de la red de Compose
+* When la API intenta inicializar la conexión usando la `DATABASE_URL`
+* Then el host se resuelve correctamente mediante el nombre del servicio (db)
+* And las tablas de SQLAlchemy se crean exitosamente en PostgreSQL
+
+## US-14: Pipeline de Integración Continua (CI) con GitHub Actions
+**Etiqueta:** `MoSCoW: Must` | **Story Points:** `5`
+Como líder técnica,
+quiero que GitHub Actions ejecute un pipeline de validación en cada push,
+para asegurar que el código nuevo no rompa las pruebas existentes ni degrade la calidad del tipado y estilo.
+
+Scenario: Ejecución de pipeline en verde
+* Given un archivo de workflow `.github/workflows/ci.yml`
+* When realizo un push a cualquier rama
+* Then el runner de GitHub instala las dependencias y ejecuta Ruff, Mypy y Pytest
+* And todas las herramientas pasan exitosamente manteniendo una cobertura >= 80%
+* And el badge del README se actualiza a estado "passing"
+
+Scenario: Intercepción de código defectuoso
+* Given un commit que contiene un error de sintaxis o rompe un test
+* When realizo un push al repositorio
+* Then el runner de GitHub detecta el fallo durante la ejecución de Pytest
+* And el pipeline se marca como fallido (rojo) bloqueando simbólicamente la integración
+
+## US-15: Despliegue Continuo (CD) a Producción en Render
+**Etiqueta:** `MoSCoW: Must` | **Story Points:** `5`
+Como stakeholder,
+quiero que la aplicación viva esté accesible en internet y se actualice automáticamente al modificar la rama principal,
+para poder consumir los endpoints reales y validar la documentación Swagger desde cualquier lugar.
+
+Scenario: Despliegue inicial a producción
+* Given el repositorio conectado a un Web Service en Render.com
+* And las variables de entorno de producción configuradas en el dashboard (sin secretos en código)
+* When Render detecta la conexión y el Dockerfile
+* Then construye la imagen en la nube y despliega el servicio
+* And la ruta pública `/docs` responde con la interfaz de Swagger
+
+Scenario: Actualización automática por Continuous Deployment
+* Given el servicio operando normalmente en Render
+* When realizo un merge o push directamente a la rama main
+* Then Render intercepta el webhook de GitHub automáticamente
+* And redespliega la nueva versión sin requerir intervención manual
+
+## US-16: Endurecimiento del Pipeline y Seguridad (Extensión Alto Potencial)
+**Etiqueta:** `MoSCoW: Could` | **Story Points:** `8`
+Como ingeniera SRE,
+quiero integrar pruebas de seguridad y tests más rigurosos,
+para certificar que nuestro artefacto está listo para grado empresarial.
+
+Scenario: Reducción del tamaño de la imagen
+* Given un Dockerfile refactorizado usando el patrón Multi-stage build
+* When construyo la imagen para producción
+* Then el peso final del artefacto es inferior a 200 MB
+* And no incluye herramientas exclusivas de desarrollo (como compiladores de C)
+
+Scenario: Escaneo de vulnerabilidades en CI
+* Given el workflow de GitHub Actions configurado
+* When el pipeline avanza a la etapa de seguridad
+* Then la herramienta Trivy escanea la imagen Docker construida
+* And si encuentra vulnerabilidades críticas, alerta al equipo en los logs del pipeline
