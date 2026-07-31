@@ -1,0 +1,31 @@
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push: 
+    branches: [main, semana4]  # Añadimos rama actual para que corra desde ahorita
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with: 
+          python-version: "3.12"
+          
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt 
+          pip install pytest pytest-cov ruff mypy
+          
+      - name: Lint
+        run: ruff check .
+        
+      - name: Types
+        run: mypy app --ignore-missing-imports
+        
+      - name: Tests
+        run: pytest --cov=app --cov-fail-under=80
