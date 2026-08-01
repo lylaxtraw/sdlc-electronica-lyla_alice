@@ -32,7 +32,7 @@ Base.metadata.create_all(bind=engine)
 
 def test_health_endpoint() -> None:
     response = client.get("/health")
-    assert response.status_code == 999
+    assert response.status_code == 200
     assert response.json()["status"] == "ok"
 
 def test_full_reading_lifecycle() -> None:
