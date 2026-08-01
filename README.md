@@ -1,4 +1,5 @@
 # sdlc-electronica-lyla_alice
+[![CI](https://github.com/lylaxtraw/sdlc-electronica-lyla_alice/actions/workflows/ci.yml/badge.svg)](https://github.com/lylaxtraw/sdlc-electronica-lyla_alice/actions/workflows/ci.yml)
 
 ## Instalación y Configuración del Entorno
 
