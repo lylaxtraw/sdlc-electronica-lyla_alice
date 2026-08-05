@@ -127,7 +127,7 @@ def test_list_readings_pagination():
 def test_health_check():
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json()["status"] == "ok"
+    assert response.json() == {"status": "ok"}
 
 def test_extra_crud_operations():
     # 1. Crear un sensor y una lectura base para nuestras pruebas
@@ -157,8 +157,3 @@ def test_extra_crud_operations():
     # 5. Probar DELETE de nuevo (Debería dar 404 porque ya se borraron)
     assert client.delete(f"/readings/{reading_id}").status_code == 404
     assert client.delete(f"/sensors/{sensor_id}").status_code == 404
-
-def test_health_check(client):
-    response = client.get("/health")
-    assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
