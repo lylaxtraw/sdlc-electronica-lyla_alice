@@ -12,6 +12,11 @@ app = FastAPI(
     version="1.0.0"
 )
 
+#Metodo de prueba para verificar que la API está funcionando correctamente
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
 """Inclusión de Routers"""
 app.include_router(sensors.router)
 app.include_router(readings.router)
