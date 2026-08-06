@@ -132,7 +132,18 @@ La IA sugirió la estructura del endpoint y el archivo de Blueprint. Apliqué ri
 - **Acepté la automatización de migraciones:** Configuré el comando de arranque para ejecutar `alembic upgrade head` antes de iniciar el servidor, garantizando que el esquema de base de datos exista antes de recibir tráfico en producción.
 
 ## Semana 4 · Entrada 5 (Viernes)
+**Este día es especial ya que tiene dos etapas**
+
 Prompt: "Diagnostica el error '`OperationalError: no such table`' en el despliegue de Render y soluciona el conflicto de historias para permitir el Pull Request desde una rama huérfana."
 La IA identificó problemas en la carga de modelos en Alembic y la desconexión entre ramas. Tomé decisiones críticas de cierre:
 - **Corregí la configuración de `env.py`:** Importé manualmente los modelos (`SensorModel`, `ReadingModel`) para que la autogeneración de Alembic detectara las tablas físicas, resolviendo la falla en la nube.
 - **Resolví el bloqueo de Git:** Dado que `semana4` era una rama huérfana, GitHub no permitía el PR. Forcé la vinculación de historias mediante `git merge main --allow-unrelated-histories` para habilitar el flujo de Despliegue Continuo (CD) exigido en la rúbrica.
+
+Prompt: "Ayúdame a corregir el código de mis repositorios Fake. Al correr Mypy me está arrojando este error: `Argument 2 to "ReadingService" has incompatible type "FakeSensorRepository"; expected "SensorRepository" [arg-type]`"
+(Tras el primer ajuste) "Mypy ahora arroja: `Incompatible types in assignment (expression has type "FakeSensorRepository", variable has type "SensorRepository")`"
+La IA diagnosticó dos problemas fundamentales en mis simuladores de base de datos. Primero, discrepancias en las firmas de los métodos (uso de `Any` en lugar de esquemas Pydantic, y variables sueltas en lugar de `SensorUpdate`). Segundo, identificó que Mypy aplica **Subtipado Nominal** por defecto; por lo tanto, aunque los métodos coincidieran, Mypy bloqueaba la ejecución porque `FakeSensorRepository` no tenía un parentesco formal (herencia) con la clase `SensorRepository` que exigía el servicio.
+Ésta vez, las desiciones fueron tomadas tras ser pasadas por un repo de prubea:
+
+- **Alineación estricta de contratos:** Refactoricé los repositorios *Fake* para que utilicen exactamente los mismos modelos de Pydantic (`SensorCreate`, `SensorUpdate`) y nombren sus métodos idéntico a la capa de persistencia real (`get_all` en lugar de `list_all`).
+- **Herencia Estratégica para Mypy:** Hice que mis repositorios simulados heredaran formalmente de las clases originales (`class FakeSensorRepository(SensorRepository):`).
+- **Desacoplamiento en Unit Tests:** Sobrescribí el método `__init__` de los Fakes (evitando llamar a `super().__init__(session)`) para no requerir la conexión a la base de datos de SQLAlchemy durante las pruebas. Esto resolvió el chequeo estricto de tipos al 100%, manteniendo las pruebas rápidas, aisladas y respetando el Principio de Inversión de Dependencias (DIP).
