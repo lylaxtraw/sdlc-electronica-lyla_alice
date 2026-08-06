@@ -39,8 +39,7 @@ COPY --from=builder /opt/venv /opt/venv
 
 # Copiamos nuestro código de la API y las migraciones
 COPY ./app ./app
- COPY ./alembic ./alembic
- COPY alembic.ini .
+COPY alembic.ini .
 
 # Dar propiedad de los archivos al usuario sin privilegios
 RUN chown -R appuser:appuser /app
