@@ -1,5 +1,8 @@
+from collections.abc import Generator
+
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
+from sqlalchemy.orm import Session as SQLAlchemySession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -16,12 +19,12 @@ engine = create_engine(
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # 2. Función de override limpia
-def override_get_db():
-    database = TestingSessionLocal()
+def override_get_db() -> Generator[SQLAlchemySession, None, None]:
+    db = TestingSessionLocal()
     try:
-        yield database
+        yield db
     finally:
-        database.close()
+        db.close()
 
 # 3. Aplicar el override ANTES de crear el cliente
 app.dependency_overrides[get_db] = override_get_db
@@ -50,7 +53,7 @@ def test_full_reading_lifecycle() -> None:
 
 # --- TESTS DE SENSORES ---
 
-def test_create_sensor():
+def test_create_sensor() -> None:
     response = client.post(
         "/sensors/",
         json={
@@ -64,13 +67,13 @@ def test_create_sensor():
     assert response.status_code == 201
     assert response.json()["name"] == "Sensor Termico A"
 
-def test_get_sensor_not_found():
+def test_get_sensor_not_found() -> None:
     response = client.get("/sensors/999")
     assert response.status_code == 404
 
 # --- TESTS DE LECTURAS Y VALIDACIÓN FÍSICA ---
 
-def test_record_valid_reading():
+def test_record_valid_reading() -> None:
     # 1. Crear el sensor primero
     client.post("/sensors/", json={
         "name": "S1", "type": "T", "unit": "C", "min_value": 0, "max_value": 100
@@ -84,7 +87,7 @@ def test_record_valid_reading():
     assert response.status_code == 201
     assert response.json()["value"] == 25.0
 
-def test_reject_reading_wrong_unit():
+def test_reject_reading_wrong_unit() -> None:
     client.post("/sensors/", json={
         "name": "S1", "type": "T", "unit": "C", "min_value": 0, "max_value": 100
     })
@@ -97,7 +100,7 @@ def test_reject_reading_wrong_unit():
     assert response.status_code == 400
     assert "Unidad incorrecta" in response.json()["detail"]
 
-def test_reject_reading_out_of_range():
+def test_reject_reading_out_of_range() -> None:
     client.post("/sensors/", json={
         "name": "S1", "type": "T", "unit": "C", "min_value": 0, "max_value": 100
     })
@@ -112,7 +115,7 @@ def test_reject_reading_out_of_range():
 
 # --- TESTS DE FILTROS Y PAGINACIÓN ---
 
-def test_list_readings_pagination():
+def test_list_readings_pagination() -> None:
     client.post("/sensors/", json={
         "name": "S1", "type": "T", "unit": "C", "min_value": -100, "max_value": 100
     })
@@ -124,12 +127,12 @@ def test_list_readings_pagination():
     response = client.get("/sensors/1/readings?limit=2")
     assert len(response.json()) == 2
 
-def test_health_check():
+def test_health_check() -> None:
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
-def test_extra_crud_operations():
+def test_extra_crud_operations() -> None:
     # 1. Crear un sensor y una lectura base para nuestras pruebas
     res_sensor = client.post("/sensors/", json={
         "name": "Sensor de Prueba", "type": "T", "unit": "C", "min_value": 0, "max_value": 100
