@@ -1,4 +1,5 @@
 # sdlc-electronica-lyla_alice
+[![CI](https://github.com/lylaxtraw/sdlc-electronica-lyla_alice/actions/workflows/ci.yml/badge.svg)](https://github.com/lylaxtraw/sdlc-electronica-lyla_alice/actions/workflows/ci.yml)
 
 ## Instalación y Configuración del Entorno
 
@@ -55,6 +56,15 @@ Para correr cualquier API dentro de este repositorio, se usa el siguiente códig
 uvicorn app.main:app --reload
 ```
 
+## Ejecución con Docker
+Para ejecutar cualquier API de este repositorio con Docker, se usa este código:
+```bash
+# 1. Levantar el sistema completo (API + PostgreSQL)
+docker compose up --build
+
+# 2. Aplicar migraciones iniciales (Alembic)
+DATABASE_URL="postgresql+psycopg://llave_de_database/sensorhub" alembic upgrade head
+```
 ---
 
 ## **Semana 1: UART driver**
@@ -121,3 +131,36 @@ Pydantic como Protección de Capa Física: Al igual que un circuito de protecci�
 
 * **SQLAlchemy como Memoria No Volátil:** Pasamos de usar diccionarios en RAM a una base de datos persistente. El uso de índices y transacciones ACID garantiza que los datos de la bodega industrial sean íntegros y consultables en milisegundos, funcionando como una Lookup Table (LUT) de alto rendimiento.
 * **Arquitectura en Capas como DIP a Escala:** La separación total permite que los Routers dependan de abstracciones de los Servicios, y estos de los Repositorios. Esto facilitó alcanzar una cobertura de integración del 89.38% mediante el uso de StaticPool en los tests para simular una persistencia compartida en memoria RAM durante la suite de pruebas.
+
+---
+
+## Semana 4: Infraestructura y Despliegue Continuo
+
+En esta etapa, el proyecto SensorHub ha transicionado de un entorno de desarrollo local a una infraestructura de producción automatizada, escalable y robusta. Se ha implementado el flujo completo de DevOps para garantizar que el software sea reproducible y se entregue de forma continua.
+
+### Acceso al Servicio en Producción
+* **API (Swagger UI):** [https://sensorhub-api.onrender.com/docs](https://sensorhub-api.onrender.com/docs)
+* **Health Check:** [https://sensorhub-api.onrender.com/health](https://sensorhub-api.onrender.com/health)
+
+### Componentes de la Infraestructura
+* **Contenerización (Docker):** Implementación de un `Dockerfile` optimizado mediante el patrón Multi-stage build utilizando la imagen base `python:3.12-slim`. Esto permitió reducir el peso del artefacto final a menos de 200 MB y aumentar la seguridad al eliminar herramientas de compilación en la imagen de ejecución.
+* **Orquestación (Docker Compose):** Configuración de un entorno local idéntico al de producción que levanta la API de FastAPI junto con una base de datos PostgreSQL 16 mediante un solo comando, gestionando redes internas y volúmenes persistentes.
+* **Integración Continua (CI):** Pipeline automatizado en GitHub Actions que ejecuta en cada push:
+    * **Linting:** Con Ruff para asegurar código limpio.
+    * **Tipado Estático:** Con Mypy para prevenir errores de tipo.
+    * **Pruebas Automatizadas:** Con Pytest, garantizando una cobertura de código ≥ 80%.
+* **Despliegue Continuo (CD):** Integración con Render.com mediante Infraestructura como Código (`render.yaml`). El sistema realiza un despliegue automático tras cada merge exitoso en la rama `main`, ejecutando las migraciones de base de datos con Alembic de forma previa al arranque del servicio.
+
+### Instrucciones de Ejecución (Docker local)
+Para replicar el entorno de producción en su máquina local:
+
+```bash
+# 1. Levantar el sistema completo (API + PostgreSQL)
+docker compose up --build
+
+# 2. Aplicar migraciones iniciales (Alembic)
+DATABASE_URL="postgresql+psycopg://sensor:secret@localhost:5433/sensorhub" alembic upgrade head
+```
+
+## Reflexión: De la "Máquina Local" a Producción
+La implementación de este pipeline resuelve el problema crítico de "funciona en mi máquina" al empaquetar el entorno completo. Al inyectar la configuración mediante variables de entorno y automatizar las migraciones en el arranque, hemos creado un artefacto inmutable que puede vivir en cualquier proveedor de nube con total seguridad (cero secretos en el historial de Git).
